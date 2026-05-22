@@ -57,6 +57,17 @@ const TEMPLATES = [
 ];
 
 // Section headers as they appear in AI output (using == delimiters)
+// ─── RESPONSIVE HOOK ─────────────────────────────────────────────────────────
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(() => typeof window !== "undefined" && window.innerWidth < 640);
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener("resize", handler);
+    return () => window.removeEventListener("resize", handler);
+  }, []);
+  return isMobile;
+}
+
 const SECTION_KEYS = ["ITINERARY", "VISA", "WEATHER", "BUDGET", "FLIGHTS", "TIPS", "PLACES"];
 
 // ─── PROMPT BUILDER ───────────────────────────────────────────────────────────
@@ -174,6 +185,7 @@ const SEASON_LABEL = {
 // ─── MAP COMPONENT ────────────────────────────────────────────────────────────
 
 function TravelMap({ places, destName }) {
+  const isMobile = useIsMobile();
   const mapRef = useRef(null);
   const instanceRef = useRef(null);
   const [status, setStatus] = useState("loading");
@@ -269,7 +281,7 @@ function TravelMap({ places, destName }) {
       <div style={styles.cardHeader}>
         <span>🗺️</span><span style={styles.cardLabel}>MAP — PLACES IN YOUR ITINERARY</span>
       </div>
-      <div style={{ position: "relative", height: 400, overflow: "hidden" }}>
+      <div style={{ position: "relative", height: isMobile ? 280 : 400, overflow: "hidden" }}>
         <div ref={mapRef} style={{ width: "100%", height: "100%" }} />
         {status === "loading" && (
           <div style={styles.mapOverlay}>
@@ -340,6 +352,7 @@ function VisaCard({ lines, data, dest }) {
 // ─── BUDGET CARD ──────────────────────────────────────────────────────────────
 
 function BudgetCard({ lines, data, days }) {
+  const isMobile = useIsMobile();
   const [tier, setTier] = useState("mid");
 
   const currency = getTag(data, "CURRENCY", "USD");
@@ -369,14 +382,14 @@ function BudgetCard({ lines, data, days }) {
 
   return (
     <div style={styles.card}>
-      <div style={styles.cardHeader}>
+      <div style={{ ...styles.cardHeader, flexWrap: "wrap", gap: 6 }}>
         <span>💰</span>
         <span style={styles.cardLabel}>BUDGET — PER PERSON</span>
-        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 6 }}>
+        <div style={{ marginLeft: "auto", display: "flex", alignItems: "center", gap: 5, flexWrap: "wrap", justifyContent: "flex-end" }}>
           <span style={{ fontSize: 11, color: "#8a94a6" }}>1 USD = {fxRate} {currency}</span>
           {fxSource === "live"
-            ? <span style={{ fontSize: 10, background: "#e8f8f0", color: "#27ae60", border: "1px solid #a7f3d0", borderRadius: 4, padding: "2px 7px", fontWeight: 600 }}>✓ Live rate</span>
-            : <span style={{ fontSize: 10, background: "#fff8e8", color: "#b45309", border: "1px solid #fde68a", borderRadius: 4, padding: "2px 7px", fontWeight: 600 }}>⚠ Approx</span>
+            ? <span style={{ fontSize: 10, background: "#e8f8f0", color: "#27ae60", border: "1px solid #a7f3d0", borderRadius: 4, padding: "2px 7px", fontWeight: 600, whiteSpace: "nowrap" }}>✓ Live</span>
+            : <span style={{ fontSize: 10, background: "#fff8e8", color: "#b45309", border: "1px solid #fde68a", borderRadius: 4, padding: "2px 7px", fontWeight: 600, whiteSpace: "nowrap" }}>⚠ Approx</span>
           }
         </div>
       </div>
@@ -385,7 +398,7 @@ function BudgetCard({ lines, data, days }) {
         {hasBudget ? (
           <>
             {/* Tier selector */}
-            <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+            <div style={{ display: "flex", gap: 8, marginBottom: 20, flexWrap: "wrap" }}>
               {Object.entries(tierMap).map(([key, t]) => t.daily > 0 && (
                 <button key={key}
                   style={{
@@ -402,7 +415,7 @@ function BudgetCard({ lines, data, days }) {
             </div>
 
             {/* Two-column grid: left = cost breakdown, right = totals */}
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 16, marginBottom: 16 }}>
+            <div style={{ display: "grid", gridTemplateColumns: isMobile ? "1fr" : "1fr 1fr", gap: 16, marginBottom: 16 }}>
 
               {/* LEFT: per-day breakdown */}
               <div>
@@ -520,6 +533,7 @@ function BudgetCard({ lines, data, days }) {
 // ─── FLIGHTS CARD ─────────────────────────────────────────────────────────────
 
 function FlightsCard({ lines, data, origin, dest }) {
+  const isMobile = useIsMobile();
   const currency      = getTag(data, "CURRENCY", "USD");
   const airlines      = getTag(data, "FLIGHT_AIRLINES");
   const fromAirport   = getTag(data, "FLIGHT_FROM_AIRPORT");
@@ -556,10 +570,10 @@ function FlightsCard({ lines, data, origin, dest }) {
           <>
             {/* Route */}
             {(fromAirport || toAirport) && (
-              <div style={styles.flightRoute}>
-                <div style={styles.flightAirport}>{fromAirport || origin}</div>
-                <div style={{ color: "#378add", fontSize: 14, padding: "0 8px" }}>✈</div>
-                <div style={styles.flightAirport}>{toAirport || dest}</div>
+              <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", alignItems: isMobile ? "flex-start" : "center", padding: "10px 0", marginBottom: 4, gap: isMobile ? 2 : 0 }}>
+                <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#1a1a2e" }}>{fromAirport || origin}</div>
+                <div style={{ color: "#378add", fontSize: 13, padding: isMobile ? "2px 0" : "0 8px", transform: isMobile ? "none" : "none" }}>{"→ ✈ →"}</div>
+                <div style={{ flex: 1, fontSize: 13, fontWeight: 700, color: "#1a1a2e" }}>{toAirport || dest}</div>
               </div>
             )}
             {duration && (
@@ -590,10 +604,14 @@ function FlightsCard({ lines, data, origin, dest }) {
                 const [lo, hi] = parseRange(range);
                 return (
                   <div key={key} style={{
-                    ...styles.seasonRow,
                     background: isCurrent ? "#f0f6fd" : "#fafbfc",
                     border: isCurrent ? "1px solid #dce8f7" : "1px solid #f0f2f5",
                     borderLeft: `3px solid ${color}`,
+                    borderRadius: 8, padding: "8px 10px",
+                    display: "flex",
+                    flexDirection: isMobile ? "column" : "row",
+                    alignItems: isMobile ? "flex-start" : "center",
+                    gap: isMobile ? 3 : 0,
                   }}>
                     <div style={{ flex: 1 }}>
                       <div style={{ fontSize: 13, fontWeight: isCurrent ? 600 : 400, color: isCurrent ? "#378add" : "#2d3748", display: "flex", alignItems: "center", gap: 6 }}>
@@ -740,6 +758,7 @@ function CityDropdown({ value, onChange, glassStyle }) {
 // ─── HERO PAGE ────────────────────────────────────────────────────────────────
 
 function HeroPage({ onStart }) {
+  const isMobile = useIsMobile();
   const [dest, setDest] = useState("");
   const [days, setDays] = useState(5);
   const [origin, setOrigin] = useState("Bengaluru, India");
@@ -767,15 +786,17 @@ function HeroPage({ onStart }) {
         </p>
         <div style={styles.searchCard}>
           <CityDropdown value={origin} onChange={setOrigin} />
-          <div style={styles.inputRow}>
-            <input style={styles.glassInput} type="text"
+          <div style={{ display: "flex", flexDirection: isMobile ? "column" : "row", gap: 10 }}>
+            <input style={{ ...styles.glassInput, minWidth: 0, width: "100%" }} type="text"
               placeholder="Where to? e.g. Paris, Bali, Tokyo…"
               value={dest} onChange={(e) => setDest(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && go()} />
-            <input style={{ ...styles.glassInput, width: 80, textAlign: "center" }}
-              type="number" min={1} max={30} value={days}
-              onChange={(e) => setDays(Number(e.target.value))} />
-            <button style={styles.planBtn} onClick={() => go()}>Plan my trip →</button>
+            <div style={{ display: "flex", gap: 10 }}>
+              <input style={{ ...styles.glassInput, width: isMobile ? "100%" : 80, flex: isMobile ? 1 : "none", textAlign: "center" }}
+                type="number" min={1} max={30} value={days}
+                onChange={(e) => setDays(Number(e.target.value))} />
+              <button style={{ ...styles.planBtn, flex: isMobile ? 1 : "none" }} onClick={() => go()}>Plan →</button>
+            </div>
           </div>
         </div>
         <div style={styles.quickPicks}>
@@ -796,6 +817,7 @@ function HeroPage({ onStart }) {
 // ─── PLANNER PAGE ─────────────────────────────────────────────────────────────
 
 function PlannerPage({ initialDest, initialDays, initialOrigin, onBack }) {
+  const isMobile = useIsMobile();
   const [dest, setDest]       = useState(initialDest);
   const [days, setDays]       = useState(initialDays);
   const [origin]              = useState(initialOrigin);
@@ -840,23 +862,39 @@ function PlannerPage({ initialDest, initialDays, initialOrigin, onBack }) {
 
   return (
     <div style={styles.plannerPage}>
-      <header style={styles.planHeader}>
+      <header style={{ ...styles.planHeader, flexWrap: "wrap" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           <button style={styles.backBtn} onClick={onBack}>← Back</button>
           <div style={{ fontSize: 16, fontWeight: 600, color: "#1a1a2e" }}>
             ✈ Trip<span style={{ color: "#378add" }}>AI</span>
           </div>
         </div>
-        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <input style={{ ...styles.ctrlInput, width: 170 }} type="text" placeholder="Destination"
-            value={dest} onChange={(e) => setDest(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && generate()} />
-          <input style={{ ...styles.ctrlInput, width: 68, textAlign: "center" }}
-            type="number" min={1} max={30} value={days}
-            onChange={(e) => setDays(Number(e.target.value))} />
-          <button style={{ ...styles.ctrlBtn, opacity: loading ? 0.45 : 1 }}
-            onClick={() => generate()} disabled={loading}>Generate</button>
-        </div>
+        {/* Desktop: inputs inline in header */}
+        {!isMobile && (
+          <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+            <input style={{ ...styles.ctrlInput, width: 170 }} type="text" placeholder="Destination"
+              value={dest} onChange={(e) => setDest(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && generate()} />
+            <input style={{ ...styles.ctrlInput, width: 68, textAlign: "center" }}
+              type="number" min={1} max={30} value={days}
+              onChange={(e) => setDays(Number(e.target.value))} />
+            <button style={{ ...styles.ctrlBtn, opacity: loading ? 0.45 : 1 }}
+              onClick={() => generate()} disabled={loading}>Generate</button>
+          </div>
+        )}
+        {/* Mobile: compact full-width row below logo */}
+        {isMobile && (
+          <div style={{ display: "flex", gap: 8, width: "100%", marginTop: 8 }}>
+            <input style={{ ...styles.ctrlInput, flex: 1, minWidth: 0 }} type="text" placeholder="Destination"
+              value={dest} onChange={(e) => setDest(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && generate()} />
+            <input style={{ ...styles.ctrlInput, width: 52, textAlign: "center", flexShrink: 0 }}
+              type="number" min={1} max={30} value={days}
+              onChange={(e) => setDays(Number(e.target.value))} />
+            <button style={{ ...styles.ctrlBtn, flexShrink: 0, opacity: loading ? 0.45 : 1 }}
+              onClick={() => generate()} disabled={loading}>Go</button>
+          </div>
+        )}
       </header>
 
       <div style={styles.planBody}>
@@ -984,7 +1022,7 @@ export default function App() {
 const styles = {
   hero: {
     minHeight: "100vh", display: "flex", flexDirection: "column",
-    alignItems: "center", justifyContent: "center", padding: "2rem",
+    alignItems: "center", justifyContent: "center", padding: "1.5rem 1rem",
     position: "relative",
     background: "linear-gradient(160deg, #0a1628 0%, #0f2847 50%, #1a3a5c 100%)",
     overflow: "hidden",
@@ -1073,7 +1111,7 @@ const styles = {
     background: "linear-gradient(135deg,#378add,#7c5cbf)", border: "none",
     borderRadius: 8, color: "#fff", fontSize: 13, fontWeight: 500, padding: "8px 18px", cursor: "pointer",
   },
-  planBody: { flex: 1, padding: "2rem 1.5rem", maxWidth: 960, margin: "0 auto", width: "100%" },
+  planBody: { flex: 1, padding: "2rem 1rem", maxWidth: 960, margin: "0 auto", width: "100%", boxSizing: "border-box" },
   emptyState: { textAlign: "center", padding: "5rem 2rem", color: "#8a94a6" },
   spinner: {
     width: 36, height: 36, border: "2px solid #e5e8ed", borderTopColor: "#378add",
