@@ -1062,10 +1062,10 @@ const styles = {
   },
   inputRow: { display: "flex", gap: 10, flexWrap: "wrap" },
   glassInput: {
-    flex: 1, minWidth: 160, background: "rgba(255,255,255,0.08)",
+    flex: 1, minWidth: 160, maxWidth: "100%", background: "rgba(255,255,255,0.08)",
     border: "0.5px solid rgba(255,255,255,0.15)", borderRadius: 12,
     color: "#fff", fontSize: 15, padding: "13px 16px", outline: "none",
-    fontFamily: "inherit",
+    fontFamily: "inherit", boxSizing: "border-box",
   },
   planBtn: {
     background: "linear-gradient(135deg,#378add,#7c5cbf)", border: "none",
