@@ -816,8 +816,8 @@ function PlannerPage({ initialDest, initialDays, initialOrigin, onBack }) {
     setParsed(null);
     setError(null);
     try {
-      // const res = await fetch("https://ai-travel-planner-server1.onrender.com/api/generate-itinerary", {
-        const res = await fetch("http://localhost:8080/api/generate-itinerary", {
+      const res = await fetch("https://ai-travel-planner-server1.onrender.com/api/generate-itinerary", {
+        // const res = await fetch("http://localhost:8080/api/generate-itinerary", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ destination: d, days: n, origin: o }),
